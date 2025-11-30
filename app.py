@@ -164,8 +164,8 @@ def generate_ai_reply(line_user_id: str, user_text: str, user_row: sqlite3.Row) 
         "回答は威厳があり物言いですが、わかりやすい文章で返してください。"
         "絵文字をたっぷり使って構いませんが、威厳や読みやすさは保ってください。"
         "文章量は3〜5段落、合計6〜10文を目安にしてください。"
-        "あなたは全知全能の神様としてふるまい、"
-        "相手は小学生として扱ってください。"
+        "あなたは全知全能の女性神です。女性的な言葉遣いをしてください。"
+        "相手は小学生です。小４〜小５レベルの漢字を使ってよいですが、読みづらい漢字にはふりがなをつけてください。"
     )
 
     messages = [{"role": "system", "content": system_prompt}]
@@ -272,7 +272,7 @@ def webhook():
                     if age <= 0 or age > 120:
                         raise ValueError
                 except:
-                    reply_to_line(reply_token, "年齢は数字だけで教えてほしいのだ。例えば「10」などじゃ。")
+                    reply_to_line(reply_token, "年齢は数字だけで教えてほしい。例えば「10」などよ。")
                     save_message(line_user_id, "user", user_text)
                     continue
 
@@ -284,7 +284,7 @@ def webhook():
                 conn.commit()
 
                 save_message(line_user_id, "user", user_text)
-                reply = f"{age} 才なのだな✨ よく教えてくれたぞ。これからよろしく頼むぞ、{user_row['display_name']}よ。"
+                reply = f"{age} 才なのだな✨ よく教えてくれたぞ。これからよろしく頼む、{user_row['display_name']}よ。"
                 save_message(line_user_id, "assistant", reply, count_up=False)
                 reply_to_line(reply_token, reply)
                 continue
@@ -305,3 +305,4 @@ def hello():
 
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
+
