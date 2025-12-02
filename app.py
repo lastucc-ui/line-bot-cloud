@@ -17,7 +17,6 @@ except ImportError:
 app = Flask(__name__)
 
 
-
 # ===== 環境変数 =====
 LINE_CHANNEL_ACCESS_TOKEN = os.environ["LINE_CHANNEL_ACCESS_TOKEN"]
 OPENAI_API_KEY = os.environ["OPENAI_API_KEY"]
@@ -25,13 +24,11 @@ OPENAI_API_KEY = os.environ["OPENAI_API_KEY"]
 client = OpenAI(api_key=OPENAI_API_KEY)
 
 
-
 # ===== TinyDB（記憶DB） =====
 db = TinyDB("memory.json")
 users_table = db.table("users")
 messages_table = db.table("messages")
 U = Query()
-
 
 
 # ===== 年齢に応じた言葉づかい・漢字レベルのルール =====
@@ -61,7 +58,6 @@ def get_age_language_rule(age: int | None) -> str:
         "このユーザーは高学年です。小学生でも読めるレベルの漢字とことばを使い、"
         "とてもむずかしい漢字や専門用語はできるだけ避けてください。"
     )
-
 
 
 # ===== ユーザー記憶操作 =====
@@ -96,7 +92,6 @@ def delete_user(line_user_id: str):
     """ユーザー情報と会話ログをすべて削除（リセット用）"""
     users_table.remove(U.user_id == line_user_id)
     messages_table.remove(U.user_id == line_user_id)
-
 
 
 # ===== 会話ログ操作 =====
@@ -161,7 +156,6 @@ def update_persona_summary_if_needed(line_user_id: str, user: dict):
         update_user(line_user_id, persona_summary=summary)
     except Exception as e:
         print("persona summary error:", e, flush=True)
-
 
 
 # ===== OpenAI で神さま返信を作る =====
@@ -234,7 +228,6 @@ def generate_ai_reply(line_user_id: str, user_text: str, user: dict) -> str:
     return reply
 
 
-
 # ===== LINE 返信 =====
 def reply_to_line(reply_token: str, text: str):
     url = "https://api.line.me/v2/bot/message/reply"
@@ -248,7 +241,6 @@ def reply_to_line(reply_token: str, text: str):
     }
     resp = requests.post(url, headers=headers, json=body)
     print("LINE reply status:", resp.status_code, resp.text, flush=True)
-
 
 
 # ===== Webhook =====
@@ -279,27 +271,27 @@ def webhook():
                 continue
 
             # ==== 記憶表示コマンド ====
-if user_text.strip() == "記憶みせて":
-    try:
-        with open("memory.json", "r", encoding="utf-8") as f:
-            raw_json = json.load(f)
+            if user_text.strip() == "記憶みせて":
+                try:
+                    with open("memory.json", "r", encoding="utf-8") as f:
+                        raw_json = json.load(f)
 
-        # JSON を整形して Unicode もデコード
-        pretty = json.dumps(raw_json, ensure_ascii=False, indent=2)
+                    # JSON を整形して Unicode もデコード
+                    pretty = json.dumps(raw_json, ensure_ascii=False, indent=2)
 
-        # LINE 文字数制限対策
-        if len(pretty) > 2500:
-            pretty = pretty[:2500] + "\n…（長いのでここまで）"
+                    # LINE 文字数制限対策
+                    if len(pretty) > 2500:
+                        pretty = pretty[:2500] + "\n…（長いのでここまで）"
 
-        reply_to_line(
-            reply_token,
-            f"📘 今の記憶データだよ：\n{pretty}"
-        )
+                    reply_to_line(
+                        reply_token,
+                        f"📘 今の記憶データだよ：\n{pretty}"
+                    )
 
-    except Exception as e:
-        reply_to_line(reply_token, "記憶データの読み取りでエラーが出たみたい🥲")
-    continue
-
+                except Exception as e:
+                    print("memory view error:", e, flush=True)
+                    reply_to_line(reply_token, "記憶データの読み取りでエラーが出たみたい🥲")
+                continue
 
             # ==== 名前登録フェーズ ====
             if state == "need_name":
@@ -357,15 +349,12 @@ if user_text.strip() == "記憶みせて":
     return jsonify({"status": "ok"}), 200
 
 
-
 @app.route("/", methods=["GET"])
 def health_check():
     return "LINE 神さまBOT with TinyDB memory is running.", 200
-
 
 
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     # Render / Railway などで 0.0.0.0 を指定
     app.run(host="0.0.0.0", port=port)
-
