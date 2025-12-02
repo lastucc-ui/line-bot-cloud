@@ -1,6 +1,6 @@
 flask
 requests
 openai
-
 gunicorn
 line-bot-sdk
+tinydb==4.8.0
