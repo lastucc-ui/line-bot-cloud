@@ -279,24 +279,27 @@ def webhook():
                 continue
 
             # ==== 記憶表示コマンド ====
-            if user_text.strip() == "記憶みせて":
-                try:
-                    with open("memory.json", "r", encoding="utf-8") as f:
-                        data = f.read()
-                    # LINE の文字数制限対策で少しだけ切り詰める
-                    if len(data) > 2500:
-                        data = data[:2500] + "\n…（長いのでここまでを表示したよ）"
-                    reply_to_line(
-                        reply_token,
-                        f"📘 今の記憶データだよ：\n{data}"
-                    )
-                except Exception as e:
-                    print("memory view error:", e, flush=True)
-                    reply_to_line(
-                        reply_token,
-                        "ごめんね、記憶データをよみこむとちゅうで しょうがいが起きたみたいだよ🥲"
-                    )
-                continue
+if user_text.strip() == "記憶みせて":
+    try:
+        with open("memory.json", "r", encoding="utf-8") as f:
+            raw_json = json.load(f)
+
+        # JSON を整形して Unicode もデコード
+        pretty = json.dumps(raw_json, ensure_ascii=False, indent=2)
+
+        # LINE 文字数制限対策
+        if len(pretty) > 2500:
+            pretty = pretty[:2500] + "\n…（長いのでここまで）"
+
+        reply_to_line(
+            reply_token,
+            f"📘 今の記憶データだよ：\n{pretty}"
+        )
+
+    except Exception as e:
+        reply_to_line(reply_token, "記憶データの読み取りでエラーが出たみたい🥲")
+    continue
+
 
             # ==== 名前登録フェーズ ====
             if state == "need_name":
@@ -365,3 +368,4 @@ if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     # Render / Railway などで 0.0.0.0 を指定
     app.run(host="0.0.0.0", port=port)
+
